@@ -26,10 +26,14 @@ def get_calendar_events(start_date, end_date, employee=None):
     holiday_list = frappe.db.get_value('Employee', {'user_id': current_user}, 'holiday_list')
 
     if holiday_list:
+
         holidays = frappe.get_all('Holiday', 
             filters={'parent': holiday_list}, 
-            fields=['holiday_date', 'public_holiday_']
+            fields=['holiday_date', 'public_holiday_', 'parent']
         )
+        
+        holiday_doc = holiday_list
+        weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_doc}, "weekly_off")
 
         for holiday in holidays:
             if holiday.get('public_holiday_'):
@@ -59,8 +63,13 @@ def get_calendar_events(start_date, end_date, employee=None):
 
         modified_events.append(event)
 
-    return modified_events
+    # return modified_events
+    return {
+        "modified_events": modified_events,
+        "weekly_off": weekly_off  # Send weekly_off value to frontend
+    }
 
+    
 @frappe.whitelist()
 def is_hr_manager():
     current_user = frappe.session.user

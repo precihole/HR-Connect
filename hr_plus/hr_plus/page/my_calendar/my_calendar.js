@@ -267,7 +267,8 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                         callback: function(r) {
                                             if (!r.exc && r.message) {
                                                 // console.log(`Event filters ${employeeFilter}`);
-                                                var attendance = r.message;
+                                                var attendance = r.message.modified_events;
+                                                var weeklyOffDay = r.message.weekly_off; 
                                                 var events = attendance.flatMap(function(event) {
                                                     var backgroundColor, borderColor, textColor = "black";
                                                     switch (event.status) {
@@ -410,6 +411,30 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                 });
                                                 // console.log(events);
                                                 successCallback(events);
+                                                
+                                                calendar.setOption('dayCellClassNames', function(arg) {
+                                                    var classes = [];
+                                                    var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                                                    
+                                                    var weekDaysMap = {
+                                                        "Sunday": 0,
+                                                        "Monday": 1,
+                                                        "Tuesday": 2,
+                                                        "Wednesday": 3,
+                                                        "Thursday": 4,
+                                                        "Friday": 5,
+                                                        "Saturday": 6
+                                                    };
+                                                    
+                                                    if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
+                                                        classes.push('friday-highlight');  // Apply the highlight class
+                                                    }
+                                                    
+                                                    return classes;
+                                                });
+                                    
+                                              
+                                                
                                             } else {
                                                 failureCallback();
                                             }
@@ -426,15 +451,15 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                 },
                 // Highlight Fridays
                 
-                dayCellClassNames: function(arg) {
-                    var classes = [];
-                    // Check if the day is Friday (5 is Friday in JavaScript)
-                    if (arg.date.getDay() === 5) {
-                        classes.push('friday-highlight');
+                // dayCellClassNames: function(arg) {
+                //     var classes = [];
+                //     // Check if the day is Friday (5 is Friday in JavaScript)
+                //     if (arg.date.getDay() === 0) {
+                //         classes.push('friday-highlight');
 
-                    }
-                    return classes;
-                },
+                //     }
+                //     return classes;
+                // },
                 
               
                 events: function(fetchInfo, successCallback, failureCallback) {
@@ -451,7 +476,8 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                         callback: function(r) {
                             if (!r.exc && r.message) {
                                 // console.log(`Event filters ${employeeFilter}`);
-                                var attendance = r.message;
+                                var attendance = r.message.modified_events;
+                                var weeklyOffDay = r.message.weekly_off; 
                                 var events = attendance.flatMap(function(event) {
                                     var backgroundColor, borderColor, textColor = "black";
                                     switch (event.status) {
@@ -590,6 +616,30 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                 });
                                 // console.log(events);
                                 successCallback(events);
+
+                                calendar.setOption('dayCellClassNames', function(arg) {
+                                    var classes = [];
+                                    var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                                    
+                                    var weekDaysMap = {
+                                        "Sunday": 0,
+                                        "Monday": 1,
+                                        "Tuesday": 2,
+                                        "Wednesday": 3,
+                                        "Thursday": 4,
+                                        "Friday": 5,
+                                        "Saturday": 6
+                                    };
+                                    
+                                    if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
+                                        classes.push('friday-highlight');  // Apply the highlight class
+                                    }
+                                    
+                                    return classes;
+                                });
+                    
+                              
+                                
                             } else {
                                 failureCallback();
                             }
@@ -703,7 +753,8 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
             callback: function(r) {
                 if (!r.exc && r.message) {
                     // console.log(`Event filters ${employeeFilter}`);
-                    var attendance = r.message;
+                    var attendance = r.message.modified_events;
+                    var weeklyOffDay = r.message.weekly_off; 
                     var events = attendance.flatMap(function(event) {
                         var backgroundColor, borderColor, textColor = "black";
                         switch (event.status) {
@@ -762,6 +813,29 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                     });
                     // console.log(events);
                     successCallback(events);
+
+                    calendar.setOption('dayCellClassNames', function(arg) {
+                        var classes = [];
+                        var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                        
+                        var weekDaysMap = {
+                            "Sunday": 0,
+                            "Monday": 1,
+                            "Tuesday": 2,
+                            "Wednesday": 3,
+                            "Thursday": 4,
+                            "Friday": 5,
+                            "Saturday": 6
+                        };
+                        
+                        if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
+                            classes.push('friday-highlight');  // Apply the highlight class
+                        }
+                        
+                        return classes;
+                    });
+        
+                    
                 } else {
                     failureCallback();
                 }
@@ -777,15 +851,15 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                     },
                     // Highlight Fridays
                 
-                dayCellClassNames: function(arg) {
-                    var classes = [];
-                    // Check if the day is Friday (5 is Friday in JavaScript)
-                    if (arg.date.getDay() === 5) {
-                        classes.push('friday-highlight');
+                // dayCellClassNames: function(arg) {
+                //     var classes = [];
+                //     // Check if the day is Friday (5 is Friday in JavaScript)
+                //     if (arg.date.getDay() === 0) {
+                //         classes.push('friday-highlight');
 
-                    }
-                    return classes;
-                },
+                //     }
+                //     return classes;
+                // },
                     events: function(fetchInfo, successCallback, failureCallback) {
                         // console.log(fetchInfo.startStr);
                         // console.log(fetchInfo.endStr);
@@ -800,7 +874,8 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                             callback: function(r) {
                                 if (!r.exc && r.message) {
                                     // console.log(`Event filters ${employeeFilter}`);
-                                    var attendance = r.message;
+                                    var attendance = r.message.modified_events;
+                                    var weeklyOffDay = r.message.weekly_off; 
                                     var events = attendance.flatMap(function(event) {
                                         var backgroundColor, borderColor, textColor = "black";
                                         switch (event.status) {
@@ -858,6 +933,28 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                     });
                                     // console.log(events);
                                     successCallback(events);
+
+                                    calendar.setOption('dayCellClassNames', function(arg) {
+                                        var classes = [];
+                                        var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                                        
+                                        var weekDaysMap = {
+                                            "Sunday": 0,
+                                            "Monday": 1,
+                                            "Tuesday": 2,
+                                            "Wednesday": 3,
+                                            "Thursday": 4,
+                                            "Friday": 5,
+                                            "Saturday": 6
+                                        };
+                                        
+                                        if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
+                                            classes.push('friday-highlight');  // Apply the highlight class
+                                        }
+                                        
+                                        return classes;
+                                    });
+                                    
                                 } else {
                                     failureCallback();
                                 }
@@ -982,9 +1079,6 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
             initializeCalendar(currentTheme, is_hr_manager);
         }
     });
-
-
-
     // Function to detect theme changes and refresh the page
     function detectThemeChange() {
         setInterval(function() {
