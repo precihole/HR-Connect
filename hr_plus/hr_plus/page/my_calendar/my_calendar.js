@@ -79,7 +79,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
            border-style: solid;
            border-color: #D3D3D3;
        }
-       .friday-highlight {
+       .weekly-off-highlight {
            background-color: ${fridayBackgroundColor} !important;
        }
        #event-details-card {
@@ -112,12 +112,12 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
     border-radius: 5px;  // Set the border-radius for calendar cells
 }
 
-        .friday-highlight {
+        .weekly-off-highlight {
         background-color: #F8F8F8 !important;
         }
         
        @media (max-width: 768px) {
-           .friday-highlight {
+           .weekly-off-highlight {
              background-color: #F8F8F8 !important;
             }
             
@@ -171,7 +171,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
             .fc-event-title::first-letter {
                 visibility: hidden;  /* Hide the first character */
             }
-            .friday-highlight {
+            .weekly-off-highlight {
              background-color: #F8F8F8 !important;
             }
            #event-details-card {
@@ -228,14 +228,16 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     filterButton: {
                         text: 'Filter',
                         click: function() {
-                            // Display a dialog box with filter options
+
+                            // var year = calendar.getDate().getFullYear(); // Extract year
+                         
+                            // Display a dialog box d filter options
                             frappe.prompt([
                                 {'fieldname': 'employee', 'fieldtype': 'Link', 'label': 'Employee', 'options': 'Employee', 'default': '', 'reqd': 0}
                             ],
                             function(values) {
                                 var employeeFilter = values.employee;
-
-                                // Fetch the employee name or ID to update the title
+                                                              // Fetch the employee name or ID to update the title
                                 frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], function(r) {
                                     var employeeNameOrID = r.employee_name || r.name;
 
@@ -257,12 +259,22 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
 
                                     // Refetch events with the selected employee filter
                                 calendar.setOption('events', function(fetchInfo, successCallback, failureCallback) {
+                                    var startDate = new Date(fetchInfo.start);
+                                    var endDate = new Date(fetchInfo.end);
+                                    var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
+                                    var year = midDate.getFullYear();  // ✅ Get year from middle date
+                
+                                    // console.log("📆 Start Date:", startDate);
+                                    // console.log("📆 End Date:", endDate);
+                                    // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
+                                    
                                     frappe.call({
                                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                                         args: {
                                             start_date: fetchInfo.startStr,
                                             end_date: fetchInfo.endStr,
-                                            employee: employeeFilter
+                                            employee: employeeFilter,
+                                            calendar_year: year // Pass extracted year to backend
                                         },
                                         callback: function(r) {
                                             if (!r.exc && r.message) {
@@ -416,6 +428,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                     var classes = [];
                                                     var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                                                     
+                                                    // Mapping day names to index values
                                                     var weekDaysMap = {
                                                         "Sunday": 0,
                                                         "Monday": 1,
@@ -427,11 +440,12 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                     };
                                                     
                                                     if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
-                                                        classes.push('friday-highlight');  // Apply the highlight class
+                                                        classes.push('weekly-off-highlight');  // Apply the highlight class for weekly off
                                                     }
                                                     
                                                     return classes;
                                                 });
+                                                
                                     
                                               
                                                 
@@ -455,7 +469,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                 //     var classes = [];
                 //     // Check if the day is Friday (5 is Friday in JavaScript)
                 //     if (arg.date.getDay() === 0) {
-                //         classes.push('friday-highlight');
+                //         classes.push('weekly-off-highlight');
 
                 //     }
                 //     return classes;
@@ -463,15 +477,25 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                 
               
                 events: function(fetchInfo, successCallback, failureCallback) {
-                    // console.log(fetchInfo.startStr);
-                    // console.log(fetchInfo.endStr);
+                   
+                    var startDate = new Date(fetchInfo.start);
+                    var endDate = new Date(fetchInfo.end);
+                    var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
+                    var year = midDate.getFullYear();  // ✅ Get year from middle date
+
+                    // console.log("📆 Start Date:", startDate);
+                    // console.log("📆 End Date:", endDate);
+                    // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
+
                     var employeeFilter = ''; // Default to empty string for initial load
+                    
                     frappe.call({
                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                         args: {
                             start_date: fetchInfo.startStr,
                             end_date: fetchInfo.endStr,
-                            employee: employeeFilter
+                            employee: employeeFilter,
+                            calendar_year: year 
                         },
                         callback: function(r) {
                             if (!r.exc && r.message) {
@@ -621,6 +645,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     var classes = [];
                                     var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                                     
+                                    // Mapping day names to index values
                                     var weekDaysMap = {
                                         "Sunday": 0,
                                         "Monday": 1,
@@ -632,11 +657,12 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     };
                                     
                                     if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
-                                        classes.push('friday-highlight');  // Apply the highlight class
+                                        classes.push('weekly-off-highlight');  // Apply the highlight class for weekly off
                                     }
                                     
                                     return classes;
                                 });
+                                
                     
                               
                                 
@@ -743,12 +769,20 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
 
     // Refetch events with the selected employee filter
     calendar.setOption('events', function(fetchInfo, successCallback, failureCallback) {
+        var startDate = new Date(fetchInfo.start);
+        var endDate = new Date(fetchInfo.end);
+        var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
+        var year = midDate.getFullYear();  // ✅ Get year from middle date
+
+        
+        // console.log("🎯 Extracted Year (Middle of Range):", year); 
         frappe.call({
             method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
             args: {
                 start_date: fetchInfo.startStr,
                 end_date: fetchInfo.endStr,
-                employee: employeeFilter
+                employee: employeeFilter,
+                calendar_year: year 
             },
             callback: function(r) {
                 if (!r.exc && r.message) {
@@ -818,6 +852,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         var classes = [];
                         var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                         
+                        // Mapping day names to index values
                         var weekDaysMap = {
                             "Sunday": 0,
                             "Monday": 1,
@@ -829,11 +864,12 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         };
                         
                         if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
-                            classes.push('friday-highlight');  // Apply the highlight class
+                            classes.push('weekly-off-highlight');  // Apply the highlight class for weekly off
                         }
                         
                         return classes;
                     });
+                    
         
                     
                 } else {
@@ -855,21 +891,30 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                 //     var classes = [];
                 //     // Check if the day is Friday (5 is Friday in JavaScript)
                 //     if (arg.date.getDay() === 0) {
-                //         classes.push('friday-highlight');
+                //         classes.push('weekly-off-highlight');
 
                 //     }
                 //     return classes;
                 // },
                     events: function(fetchInfo, successCallback, failureCallback) {
                         // console.log(fetchInfo.startStr);
-                        // console.log(fetchInfo.endStr);
+                        var startDate = new Date(fetchInfo.start);
+                        var endDate = new Date(fetchInfo.end);
+                        var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
+                        var year = midDate.getFullYear();  // ✅ Get year from middle date
+    
+                        
+                        // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
+    
                         var employeeFilter = ''; // Default to empty string for initial load
                         frappe.call({
                             method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                             args: {
                                 start_date: fetchInfo.startStr,
                                 end_date: fetchInfo.endStr,
-                                employee: employeeFilter
+                                employee: employeeFilter,
+                                calendar_year: year 
+                                
                             },
                             callback: function(r) {
                                 if (!r.exc && r.message) {
@@ -938,6 +983,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                         var classes = [];
                                         var dayIndex = arg.date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                                         
+                                        // Mapping day names to index values
                                         var weekDaysMap = {
                                             "Sunday": 0,
                                             "Monday": 1,
@@ -949,11 +995,12 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                         };
                                         
                                         if (weeklyOffDay && dayIndex === weekDaysMap[weeklyOffDay]) {
-                                            classes.push('friday-highlight');  // Apply the highlight class
+                                            classes.push('weekly-off-highlight');  // Apply the highlight class for weekly off
                                         }
                                         
                                         return classes;
                                     });
+                                    
                                     
                                 } else {
                                     failureCallback();
