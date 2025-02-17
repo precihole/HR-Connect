@@ -1,152 +1,8 @@
+
 import frappe
+from datetime import datetime
 
 @frappe.whitelist()
-# def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
-#     current_user = frappe.session.user
-#     hr_role = frappe.db.get_value('HR Plus Settings', None, 'hr_plus_role')
-#     is_hr_manager = frappe.db.exists('Has Role', {'parent': current_user, 'role': hr_role})
-    
-#     filters = {'attendance_date': ['between', [start_date, end_date]], 'docstatus': 1}
-    
-#     if not is_hr_manager:
-#         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
-#         if not employee:
-#             return []
-#         filters['employee'] = employee
-#     else:
-#         if employee:
-#             filters['employee'] = employee
-
-#     # Fetch attendance events within the given date range including the document name
-#     events = frappe.db.get_list('Attendance', 
-#         filters=filters,
-#         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", "attendance_request", "late_entry", "early_exit", "leave_type"]
-#     )
-    
-    #   holiday_list = frappe.db.get_value('Employee', {'user_id': current_user}, 'holiday_list')
-#     holiday_list = frappe.db.get_value('Holiday', {'name': mach the calender title year}, 'name')
-
-#     if holiday_list:
-
-#         holidays = frappe.get_all('Holiday', 
-#             filters={'parent': holiday_list}, 
-#             fields=['holiday_date', 'public_holiday_', 'parent']
-#         )
-        
-#         holiday_doc = holiday_list
-#         weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_doc}, "weekly_off")
-
-#         for holiday in holidays:
-#             if holiday.get('public_holiday_'):
-#                 events.append({
-#                     'attendance_date': holiday['holiday_date'],
-#                     'status': 'Holiday',
-#                     'public_holiday_': holiday['public_holiday_'],
-#                     'employee': employee,
-#                     'in_time': None,
-#                     'out_time': None,
-#                     'name': None  # Holidays do not have an Attendance record
-#                 })
-
-#     modified_events = []
-#     for event in events:
-#         reason = ''
-#         workflow_state = ''
-#         if event.get('attendance_request'):
-#             reason = frappe.db.get_value('Attendance Request', event['attendance_request'], 'reason')
-#             workflow_state = frappe.db.get_value('Attendance Request', event['attendance_request'], 'workflow_state')
-        
-#         event['reason'] = reason
-#         event['workflow_state'] = workflow_state
-
-#         if event.get('status') == 'Holiday':
-#             event['title'] = 'Holiday: ' + (event.get('public_holiday_') or '')
-
-#         modified_events.append(event)
-
-#     # return modified_events
-#     return {
-#         "modified_events": modified_events,
-#         "weekly_off": weekly_off  # Send weekly_off value to frontend
-#     }
-
-
-# def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
-#     current_user = frappe.session.user
-#     hr_role = frappe.db.get_value('HR Plus Settings', None, 'hr_plus_role')
-#     is_hr_manager = frappe.db.exists('Has Role', {'parent': current_user, 'role': hr_role})
-
-#     filters = {'attendance_date': ['between', [start_date, end_date]], 'docstatus': 1}
-
-#     if not is_hr_manager:
-#         # Fetch the logged-in employee
-#         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
-#         if not employee:
-#             return []
-#         filters['employee'] = employee
-
-#         # Fetch holiday list assigned to the employee
-#         holiday_list = frappe.db.get_value('Holiday List', {'name': ['like', f'%{calendar_year}%']}, 'name')
-#     else:
-#         # If HR, allow filtering by employee
-#         if employee:
-#             filters['employee'] = employee
-
-#         # Fetch holiday list based on calendar year
-#         holiday_list = frappe.db.get_value('Holiday List', {'name': ['like', f'%{calendar_year}%']}, 'name')
-
-#     # Fetch weekly off dynamically based on holiday list
-#     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
-
-#     # Fetch attendance records
-#     events = frappe.db.get_list('Attendance', 
-#         filters=filters,
-#         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", "attendance_request", "late_entry", "early_exit", "leave_type"]
-#     )
-
-#     # Fetch holidays dynamically based on selected calendar year
-#     if holiday_list:
-#         holidays = frappe.get_all('Holiday',
-#             filters={'parent': holiday_list},
-#             fields=['holiday_date', 'public_holiday_']
-#         )
-
-#         # Append holidays to events
-#         for holiday in holidays:
-#             if holiday.get('public_holiday_'):
-#                 events.append({
-#                     'attendance_date': holiday['holiday_date'],
-#                     'status': 'Holiday',
-#                     'public_holiday_': holiday['public_holiday_'],
-#                     'employee': employee,
-#                     'in_time': None,
-#                     'out_time': None,
-#                     'name': None
-#                 })
-
-#     # Process Attendance Requests
-#     modified_events = []
-#     for event in events:
-#         reason = ''
-#         workflow_state = ''
-#         if event.get('attendance_request'):
-#             reason = frappe.db.get_value('Attendance Request', event['attendance_request'], 'reason')
-#             workflow_state = frappe.db.get_value('Attendance Request', event['attendance_request'], 'workflow_state')
-
-#         event['reason'] = reason
-#         event['workflow_state'] = workflow_state
-
-#         if event.get('status') == 'Holiday':
-#             event['title'] = 'Holiday: ' + (event.get('public_holiday_') or '')
-
-#         modified_events.append(event)
-
-#     return {
-#         "modified_events": modified_events,
-#         "weekly_off": weekly_off  # Ensure weekly off updates dynamically
-#     }
-
-
 def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
     current_user = frappe.session.user
     hr_role = frappe.db.get_value('HR Plus Settings', None, 'hr_plus_role')
@@ -155,30 +11,73 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     filters = {'attendance_date': ['between', [start_date, end_date]], 'docstatus': 1}
 
     if not is_hr_manager:
-        # Fetch the logged-in employee
         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
         if not employee:
             return []
         filters['employee'] = employee
 
-        # Fetch holiday list assigned to the employee (EXACT match with year)
         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
     else:
-        # If HR, allow filtering by employee
         if employee:
             filters['employee'] = employee
 
-        # Fetch holiday list based on calendar year (EXACT match)
         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
 
-    # Fetch weekly off dynamically based on holiday list
     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
 
     # Fetch attendance records
     events = frappe.db.get_list('Attendance', 
         filters=filters,
-        fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", "attendance_request", "late_entry", "early_exit", "leave_type"]
+        fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", 
+                "attendance_request", "late_entry", "early_exit", "leave_type"]
     )
+   
+    attendance_map = {event["attendance_date"]: event for event in events}
+
+    # Fetch Employee Checkin records **only for dates where attendance is missing**
+    checkin_records = frappe.db.get_list("Employee Checkin",
+        filters={
+            "time": ["between", [start_date, end_date]],
+            "employee": employee
+        }, 
+        fields=["log_type", "time"]
+    )
+
+    # Process Check-in & Out Logic for missing attendance dates
+    checkin_map = {}
+    for checkin in checkin_records:
+        checkin_datetime = checkin["time"]  # ✅ Already datetime object
+        checkin_date = checkin_datetime.date()
+        checkin_time = checkin_datetime.strftime("%H:%M")  # ✅ Extract only time (HH:MM)
+        print(f" time {checkin_time}")
+
+
+        if checkin_date in attendance_map:
+            continue
+
+        if checkin_date not in checkin_map:
+            checkin_map[checkin_date] = {"IN": None, "OUT": None}
+
+        if checkin["log_type"] == "IN":
+            if checkin_map[checkin_date]["IN"] is None or checkin_time < checkin_map[checkin_date]["IN"]:
+                checkin_map[checkin_date]["IN"] = checkin_time
+        elif checkin["log_type"] == "OUT":
+            if checkin_map[checkin_date]["OUT"] is None or checkin_time > checkin_map[checkin_date]["OUT"]:
+                checkin_map[checkin_date]["OUT"] = checkin_time
+    # Add Check-in & Out records for missing attendance
+    for date, times in checkin_map.items():
+        in_time = times["IN"] if times["IN"] else "NA"
+        out_time = times["OUT"] if times["OUT"] else "NA"
+        print(f" Check time :{checkin_time} - { out_time} Date is {date}")
+
+        events.append({
+            'attendance_date': date,
+            'status': 'Check-in & Out',
+            'in_time': in_time,
+            'out_time': out_time,
+            'employee': employee,
+            'name': None  
+        })
 
     # Fetch holidays dynamically based on selected calendar year
     if holiday_list:
@@ -187,7 +86,6 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             fields=['holiday_date', 'public_holiday_']
         )
 
-        # Append holidays to events (ensures only selected year's holidays are included)
         for holiday in holidays:
             if holiday.get('public_holiday_'):
                 events.append({
@@ -197,7 +95,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
                     'employee': employee,
                     'in_time': None,
                     'out_time': None,
-                    'name': None  # No specific attendance record for holidays
+                    'name': None
                 })
 
     # Process Attendance Requests
@@ -219,8 +117,9 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
 
     return {
         "modified_events": modified_events,
-        "weekly_off": weekly_off  # Ensure weekly off updates dynamically
+        "weekly_off": weekly_off  
     }
+
 
     
 @frappe.whitelist()

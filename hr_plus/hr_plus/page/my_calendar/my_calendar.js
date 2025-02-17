@@ -309,21 +309,27 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                             backgroundColor = '#EABF9F';
                                                             borderColor = backgroundColor;
                                                             break;
-
+                                                        case 'Check-in & Out': 
+                                                            backgroundColor = '#0096FF';
+                                                            break;
                                                         default:
                                                             backgroundColor = 'red';
                                                             borderColor = backgroundColor;
                                                     }
 
                                                     var inTime, outTime, durationString;
-                                                    if (event.in_time || event.out_time) {
-                                                        
+                                                    if (event.status === "Check-in & Out") {
+                                                        inTime = event.in_time ? event.in_time : "NA";
+                                                        outTime = event.out_time ? event.out_time : "NA";
+                                                        durationString = `${inTime} to ${outTime}`;
+                                                    }else if (event.in_time || event.out_time) {
                                                         // Handle case where only in_time or out_time is missing
                                                         inTime = event.in_time ? new Date(event.in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
                                                         outTime = event.out_time ? new Date(event.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
-                                                        
+                                                        // frappe.msgprint(inTime)
                                                         durationString = inTime + " to " + outTime;
                                                     }
+                                                    
 
                                                     // Create the events list in the desired order
                                                     var eventList = [
@@ -337,6 +343,31 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                         }
                                                     ];
                                                     
+                                                    
+                                                      // Conditionally add Time event
+                                                      if (durationString) {
+                                                        eventList.push({
+                                                            title: '2. Time: ' + durationString,
+                                                            start: event.attendance_date,
+                                                            end: event.attendance_date,
+                                                            backgroundColor: backgroundColor,
+                                                            borderColor: borderColor,
+                                                            textColor: textColor,
+                                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
+                                                        });
+                                                    }else if (event.status === "Check-in & Out") {
+                                                        eventList.push({
+                                                            title: '2. Time: ' + durationString,
+                                                            start: event.attendance_date,
+                                                            end: event.attendance_date,
+                                                            backgroundColor: backgroundColor,
+                                                            borderColor: borderColor,
+                                                            textColor: textColor,
+                                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
+
+                                                        });
+                                                    }
+
                                                      // Add the holiday event to the eventList if public_holiday_ is available
                                                     
                                                     if (event.public_holiday_) {  // If public_holiday_ is not empty or None
@@ -372,19 +403,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                     
 
 
-                                                    // Conditionally add Time event
-                                                    if (durationString) {
-                                                        eventList.push({
-                                                            title: '2. Time: ' + durationString,
-                                                            start: event.attendance_date,
-                                                            end: event.attendance_date,
-                                                            backgroundColor: backgroundColor,
-                                                            borderColor: borderColor,
-                                                            textColor: textColor,
-                                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
-                                                        });
-                                                    }
-
+                                                  
                                                     // Conditionally add Late Entry
                                                     if (event.late_entry) {
                                                         eventList.push({
@@ -488,7 +507,10 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
 
                     var employeeFilter = ''; // Default to empty string for initial load
-                    
+                    console.log(fetchInfo.startStr)
+                    console.log(employeeFilter)
+                    console.log(fetchInfo.endStr)
+                    console.log(year)
                     frappe.call({
                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                         args: {
@@ -529,18 +551,24 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                             backgroundColor = '#EABF9F';
                                             borderColor = backgroundColor;
                                             break;
+                                        case 'Check-in & Out': 
+                                            backgroundColor = '#0096FF';
+                                            break;    
                                         default:
                                             backgroundColor = 'red';
                                             borderColor = backgroundColor;
                                     }
 
                                     var inTime, outTime, durationString;
-                                    if (event.in_time || event.out_time) {
-                                                        
+                                    if (event.status === "Check-in & Out") {
+                                        inTime = event.in_time ? event.in_time : "NA";
+                                        outTime = event.out_time ? event.out_time : "NA";
+                                        durationString = `${inTime} to ${outTime}`;
+                                    }else if (event.in_time || event.out_time) {
                                         // Handle case where only in_time or out_time is missing
                                         inTime = event.in_time ? new Date(event.in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
                                         outTime = event.out_time ? new Date(event.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
-                                        
+                                        // frappe.msgprint(inTime)
                                         durationString = inTime + " to " + outTime;
                                     }
 
@@ -590,6 +618,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
 
 
                                     // Conditionally add Time event
+                                    
                                     if (durationString) {
                                         eventList.push({
                                             title: '2. Time: ' + durationString,
@@ -599,6 +628,17 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                             borderColor: borderColor,
                                             textColor: textColor,
                                             extendedProps: { name: event.name, status: event.status, employee: event.employee }
+                                        });
+                                    }else if (event.status === "Check-in & Out") {
+                                        eventList.push({
+                                            title: '2. Time: ' + durationString,
+                                            start: event.attendance_date,
+                                            end: event.attendance_date,
+                                            backgroundColor: backgroundColor,
+                                            borderColor: borderColor,
+                                            textColor: textColor,
+                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
+
                                         });
                                     }
 
@@ -816,18 +856,24 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                 backgroundColor = '#EABF9F';
                                 borderColor = backgroundColor;
                                 break;
+                            case 'Check-in & Out': 
+                                backgroundColor = '#0096FF';
+                                break; 
                             default:
                                 backgroundColor = 'red';
                                 borderColor = backgroundColor;
                         }
 
                         var inTime, outTime, durationString;
-                        if (event.in_time || event.out_time) {
-                        
+                        if (event.status === "Check-in & Out") {
+                            inTime = event.in_time ? event.in_time : "NA";
+                            outTime = event.out_time ? event.out_time : "NA";
+                            durationString = `${inTime} to ${outTime}`;
+                        }else if (event.in_time || event.out_time) {
                             // Handle case where only in_time or out_time is missing
                             inTime = event.in_time ? new Date(event.in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
                             outTime = event.out_time ? new Date(event.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
-                            
+                            // frappe.msgprint(inTime)
                             durationString = inTime + " to " + outTime;
                         }
 
@@ -948,18 +994,24 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                                 backgroundColor = '#EABF9F';
                                                 borderColor = backgroundColor;
                                                 break;
+                                            case 'Check-in & Out': 
+                                                backgroundColor = '#0096FF';
+                                                break; 
                                             default:
                                                 backgroundColor = 'red';
                                                 borderColor = backgroundColor;
                                         }
                 
                                         var inTime, outTime, durationString;
-                                        if (event.in_time || event.out_time) {
-                                                        
+                                        if (event.status === "Check-in & Out") {
+                                            inTime = event.in_time ? event.in_time : "NA";
+                                            outTime = event.out_time ? event.out_time : "NA";
+                                            durationString = `${inTime} to ${outTime}`;
+                                        }else if (event.in_time || event.out_time) {
                                             // Handle case where only in_time or out_time is missing
                                             inTime = event.in_time ? new Date(event.in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
                                             outTime = event.out_time ? new Date(event.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA';
-                                            
+                                            // frappe.msgprint(inTime)
                                             durationString = inTime + " to " + outTime;
                                         }
                                         // Create the events list in the desired order
@@ -1038,10 +1090,13 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         if (event.title) {
                             content += `<p><strong>Status:</strong><span class="status-click" style="cursor: pointer; "> ${event.title} </span></p>`;
                         }
-                        if (event.extendedProps.in_time || event.extendedProps.out_time) {
+                        if (event.title === "Check-in & Out") {
+
+                            content += `<p><strong>Time:</strong> ${event.extendedProps.in_time ? event.extendedProps.in_time: 'NA'} to ${event.extendedProps.out_time ? event.extendedProps.out_time :'NA'}</p>`;
+                        } else if (event.extendedProps.in_time || event.extendedProps.out_time) {
 
                             content += `<p><strong>Time:</strong> ${event.extendedProps.in_time ? new Date(event.extendedProps.in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NA'} to ${event.extendedProps.out_time ? new Date(event.extendedProps.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }):'NA'}</p>`;
-                        }                                          
+                        }                                        
                         if (event.extendedProps.late_entry) {
                             content += `<p><strong>Late Entry:</strong> ${event.extendedProps.late_entry ? 'Yes' : ''}</p>`;
                         }
