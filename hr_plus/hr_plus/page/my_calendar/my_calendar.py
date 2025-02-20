@@ -1,6 +1,127 @@
-
 import frappe
-from datetime import datetime
+from datetime import datetime, timedelta
+
+# @frappe.whitelist()
+# def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
+#     current_user = frappe.session.user
+#     hr_role = frappe.db.get_value('HR Plus Settings', None, 'hr_plus_role')
+#     is_hr_manager = frappe.db.exists('Has Role', {'parent': current_user, 'role': hr_role})
+
+#     filters = {'attendance_date': ['between', [start_date, end_date]], 'docstatus': 1}
+
+#     if not is_hr_manager:
+#         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
+#         if not employee:
+#             return []
+#         filters['employee'] = employee
+
+#         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
+#     else:
+#         if employee:
+#             filters['employee'] = employee
+           
+#         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
+
+#     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
+
+#     # Fetch attendance records
+#     events = frappe.db.get_list('Attendance', 
+#         filters=filters,
+#         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", 
+#                 "attendance_request", "late_entry", "early_exit", "leave_type"]
+#     )
+    
+#     attendance_map = {event["attendance_date"]: event for event in events}
+#     # Fetch Employee Checkin records **only for dates where attendance is missing**
+#     checkin_records = frappe.db.get_list("Employee Checkin",
+#         filters={
+#             "time": ["between", [start_date, end_date]],
+#             "employee": employee
+#         }, 
+#         fields=["log_type", "time"]
+#     )
+
+#     # Process Check-in & Out Logic for missing attendance dates
+#     checkin_map = {}
+#     for checkin in checkin_records:
+#         checkin_datetime = checkin["time"]  # ✅ Already datetime object
+#         checkin_date = checkin_datetime.date()
+#         checkin_time = checkin_datetime.strftime("%H:%M")  # ✅ Extract only time (HH:MM)
+#         print(f" time {checkin_time}")
+
+
+#         if checkin_date in attendance_map:
+#             continue
+
+#         if checkin_date not in checkin_map:
+#             checkin_map[checkin_date] = {"IN": None, "OUT": None}
+
+#         if checkin["log_type"] == "IN":
+#             if checkin_map[checkin_date]["IN"] is None or checkin_time < checkin_map[checkin_date]["IN"]:
+#                 checkin_map[checkin_date]["IN"] = checkin_time
+#         elif checkin["log_type"] == "OUT":
+#             if checkin_map[checkin_date]["OUT"] is None or checkin_time > checkin_map[checkin_date]["OUT"]:
+#                 checkin_map[checkin_date]["OUT"] = checkin_time
+#     # Add Check-in & Out records for missing attendance
+#     for date, times in checkin_map.items():
+#         in_time = times["IN"] if times["IN"] else "NA"
+#         out_time = times["OUT"] if times["OUT"] else "NA"
+#         print(f" Check time :{checkin_time} - { out_time} Date is {date}")
+
+#         events.append({
+#             'attendance_date': date,
+#             'status': 'Check-in & Out',
+#             'in_time': in_time,
+#             'out_time': out_time,
+#             'employee': employee,
+#             'name': None  
+#         })
+
+#     # Fetch Leave Application data for all statuses (Approved, Rejected, Pending)
+#     leave_data = frappe.db.get_list("Leave Application",
+#         filters={
+#             "employee": employee,
+#             "from_date": ["<=", end_date],
+#             "to_date": [">=", start_date]
+#         },
+#         fields=["name", "status", "from_date", "to_date"]
+#     )
+
+
+#     leave_map = {}
+#     for leave in leave_data:
+#         current_date = leave["from_date"]
+#         while current_date <= leave["to_date"]:
+#             leave_map[current_date] = leave["status"]
+#             current_date += timedelta(days=1)
+
+#     # Update attendance records with Leave Status
+#     for event in events:
+#         if event.get("status") == "On Leave":
+#             leave_status = leave_map.get(event["attendance_date"], "Unknown")
+#             event["leave_status"] = leave_status  # Add leave status
+
+#     modified_events = []
+#     for event in events:
+#         reason = ''
+#         workflow_state = ''
+#         if event.get('attendance_request'):
+#             reason = frappe.db.get_value('Attendance Request', event['attendance_request'], 'reason')
+#             workflow_state = frappe.db.get_value('Attendance Request', event['attendance_request'], 'workflow_state')
+
+#         event['reason'] = reason
+#         event['workflow_state'] = workflow_state
+
+#         if event.get('status') == 'Holiday':
+#             event['title'] = 'Holiday: ' + (event.get('public_holiday_') or '')
+
+#         modified_events.append(event)
+
+#     return {
+#         "modified_events": modified_events,
+#         "weekly_off": weekly_off  
+#     }
+
 
 @frappe.whitelist()
 def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
@@ -20,21 +141,21 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     else:
         if employee:
             filters['employee'] = employee
-
+           
         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
 
     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
 
-    # Fetch attendance records
+    # ✅ Fetch Attendance Records
     events = frappe.db.get_list('Attendance', 
         filters=filters,
         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", 
                 "attendance_request", "late_entry", "early_exit", "leave_type"]
     )
-   
+    
     attendance_map = {event["attendance_date"]: event for event in events}
 
-    # Fetch Employee Checkin records **only for dates where attendance is missing**
+    # ✅ Fetch Employee Checkin Records **only for dates where attendance is missing**
     checkin_records = frappe.db.get_list("Employee Checkin",
         filters={
             "time": ["between", [start_date, end_date]],
@@ -46,11 +167,9 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     # Process Check-in & Out Logic for missing attendance dates
     checkin_map = {}
     for checkin in checkin_records:
-        checkin_datetime = checkin["time"]  # ✅ Already datetime object
+        checkin_datetime = checkin["time"]
         checkin_date = checkin_datetime.date()
-        checkin_time = checkin_datetime.strftime("%H:%M")  # ✅ Extract only time (HH:MM)
-        print(f" time {checkin_time}")
-
+        checkin_time = checkin_datetime.strftime("%H:%M")
 
         if checkin_date in attendance_map:
             continue
@@ -64,11 +183,11 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         elif checkin["log_type"] == "OUT":
             if checkin_map[checkin_date]["OUT"] is None or checkin_time > checkin_map[checkin_date]["OUT"]:
                 checkin_map[checkin_date]["OUT"] = checkin_time
-    # Add Check-in & Out records for missing attendance
+
+    # ✅ Add Check-in & Out records for missing attendance
     for date, times in checkin_map.items():
         in_time = times["IN"] if times["IN"] else "NA"
         out_time = times["OUT"] if times["OUT"] else "NA"
-        print(f" Check time :{checkin_time} - { out_time} Date is {date}")
 
         events.append({
             'attendance_date': date,
@@ -79,26 +198,45 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             'name': None  
         })
 
-    # Fetch holidays dynamically based on selected calendar year
-    if holiday_list:
-        holidays = frappe.get_all('Holiday',
-            filters={'parent': holiday_list},
-            fields=['holiday_date', 'public_holiday_']
-        )
+    # ✅ Fetch Leave Application data for all statuses (Approved, Rejected, Pending)
+    leave_data = frappe.db.get_list("Leave Application",
+        filters={
+            "employee": employee,
+            "from_date": ["<=", end_date],
+            "to_date": [">=", start_date]
+        },
+        fields=["name", "status", "from_date", "to_date", "leave_type"]
+    )
 
-        for holiday in holidays:
-            if holiday.get('public_holiday_'):
-                events.append({
-                    'attendance_date': holiday['holiday_date'],
-                    'status': 'Holiday',
-                    'public_holiday_': holiday['public_holiday_'],
-                    'employee': employee,
-                    'in_time': None,
-                    'out_time': None,
-                    'name': None
-                })
+    leave_map = {}
+    for leave in leave_data:
+        current_date = leave["from_date"]
+        while current_date <= leave["to_date"]:
+            leave_map[current_date] = {
+                "status": leave["status"],
+                "leave_type": leave["leave_type"]
+            }
+            current_date += timedelta(days=1)
 
-    # Process Attendance Requests
+    # ✅ Process "On Leave" for **both missing and existing attendance**
+    for date, leave_details in leave_map.items():
+        if date in attendance_map:
+            # If attendance exists, update leave info
+            attendance_map[date]["status"] = "On Leave"
+            attendance_map[date]["leave_status"] = leave_details["status"]
+            attendance_map[date]["leave_type"] = leave_details["leave_type"]
+        else:
+            # If attendance is missing, add a new leave event
+            events.append({
+                'attendance_date': date,
+                'status': 'On Leave',
+                'leave_status': leave_details["status"],
+                'leave_type': leave_details["leave_type"],
+                'employee': employee,
+                'name': None  
+            })
+
+    # ✅ Process Final Events List
     modified_events = []
     for event in events:
         reason = ''
@@ -119,7 +257,6 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         "modified_events": modified_events,
         "weekly_off": weekly_off  
     }
-
 
     
 @frappe.whitelist()

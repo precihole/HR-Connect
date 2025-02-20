@@ -236,14 +236,15 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                 {'fieldname': 'employee', 'fieldtype': 'Link', 'label': 'Employee', 'options': 'Employee', 'default': '', 'reqd': 0}
                             ],
                             function(values) {
-                                var employeeFilter = values.employee;
+                                console.log(values)
+                                var employeeFilter = values.employee || (is_hr_manager ? frappe.session.user : ''); 
                                                               // Fetch the employee name or ID to update the title
                                 frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], function(r) {
                                     var employeeNameOrID = r.employee_name || r.name;
 
                                     // Dynamically update the page title with the selected employee
                                     // Set the page title with a placeholder
-                                    page.set_title(`My Calendar - <span class="calendar-title-normal">${employeeNameOrID}</span>`);
+                                    page.set_title(`My Calendar - <span class="calendar-title-normal">${employeeNameOrID} </span>`);
 
                                     // After setting the title, manually adjust the specific elements
                                     $('.page-title .title-area .title-text').html(`
@@ -267,7 +268,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     // console.log("📆 Start Date:", startDate);
                                     // console.log("📆 End Date:", endDate);
                                     // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
-                                    
+                                   
                                     frappe.call({
                                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                                         args: {
@@ -278,7 +279,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                         },
                                         callback: function(r) {
                                             if (!r.exc && r.message) {
-                                                // console.log(`Event filters ${employeeFilter}`);
+                                                console.log(`Event filters ${employeeFilter}`);
                                                 var attendance = r.message.modified_events;
                                                 var weeklyOffDay = r.message.weekly_off; 
                                                 var events = attendance.flatMap(function(event) {
@@ -367,7 +368,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
 
                                                         });
                                                     }
-
+                                                    
                                                      // Add the holiday event to the eventList if public_holiday_ is available
                                                     
                                                     if (event.public_holiday_) {  // If public_holiday_ is not empty or None
@@ -437,6 +438,17 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                             extendedProps: { name: event.name, status: event.status, employee: event.employee }
                                                         });
                                                     }
+                                                     // Display Leave Status if applicable
+                                                    if (event.status === "On Leave" && event.leave_status) {
+                                                        eventList.push({
+                                                            title: '3. Status: ' + event.leave_status,
+                                                            start: event.attendance_date,
+                                                            backgroundColor: backgroundColor,
+                                                            borderColor: borderColor,
+                                                            textColor: textColor,
+                                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
+                                                        });
+                                                    }
 
                                                     return eventList;
                                                 });
@@ -474,7 +486,8 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                         }
                                     });
                                 });
-
+                               
+                                
                                     calendar.refetchEvents();
                                 });
                             }, 'Filter Events', 'Filter');
@@ -506,7 +519,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     // console.log("📆 End Date:", endDate);
                     // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
 
-                    var employeeFilter = ''; // Default to empty string for initial load
+                    var employeeFilter =  frappe.session.user; // Default to empty string for initial load
                     console.log(fetchInfo.startStr)
                     console.log(employeeFilter)
                     console.log(fetchInfo.endStr)
@@ -668,6 +681,17 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     if (event.leave_type) {
                                         eventList.push({
                                             title: '2. Type: ' + event.leave_type,
+                                            start: event.attendance_date,
+                                            backgroundColor: backgroundColor,
+                                            borderColor: borderColor,
+                                            textColor: textColor,
+                                            extendedProps: { name: event.name, status: event.status, employee: event.employee }
+                                        });
+                                    }
+                                     // Display Leave Status if applicable
+                                     if (event.status === "On Leave" && event.leave_status) {
+                                        eventList.push({
+                                            title: '3. Status: ' + event.leave_status,
                                             start: event.attendance_date,
                                             backgroundColor: backgroundColor,
                                             borderColor: borderColor,
@@ -885,7 +909,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                 backgroundColor: backgroundColor,
                                 borderColor: borderColor,
                                 textColor: textColor,
-                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason }
+                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason,leave_status :event.leave_status }
                             }
                         ];
 
@@ -1022,7 +1046,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                                 backgroundColor: backgroundColor,
                                                 borderColor: borderColor,
                                                 textColor: textColor,
-                                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason , holiday: event.public_holiday_, workflow_state: event.workflow_state}
+                                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason , holiday: event.public_holiday_, workflow_state: event.workflow_state,leave_status: event.leave_status}
                                             }
                                         ];
                 
@@ -1103,8 +1127,11 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         if (event.extendedProps.early_exit) {
                             content += `<p><strong>Early Exit:</strong> ${event.extendedProps.early_exit ? 'Yes' : ''}</p>`;
                         }
-                        if (event.extendedProps.leave_type) {
+                        if (event.extendedProps.leave_type ) {
                             content += `<p><strong>Leave Type:</strong> ${event.extendedProps.leave_type}</p>`;
+                        }
+                        if (event.title === "On Leave" && event.extendedProps.leave_status) {
+                            content += `<p><strong>Status:</strong> ${event.extendedProps.leave_status}</p>`;
                         }
                        
                         if (event.extendedProps.attendance_request || event.extendedProps.reason) {
