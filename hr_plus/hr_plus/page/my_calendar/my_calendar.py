@@ -24,7 +24,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
 
     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
 
-    # ✅ Fetch Attendance Records
+    #  Fetch Attendance Records
     events = frappe.db.get_list('Attendance', 
         filters=filters,
         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", 
@@ -33,7 +33,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     
     attendance_map = {event["attendance_date"]: event for event in events}
 
-    # ✅ Fetch Employee Checkin Records **only for dates where attendance is missing**
+    # Fetch Employee Checkin Records **only for dates where attendance is missing**
     checkin_records = frappe.db.get_list("Employee Checkin",
         filters={
             "time": ["between", [start_date, end_date]],
@@ -92,27 +92,38 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         while current_date <= leave["to_date"]:
             leave_map[current_date] = {
                 "status": leave["status"],
-                "leave_type": leave["leave_type"]
+                "leave_type": leave["leave_type"],
+                "leave_application": leave["name"]  # Store Leave Application ID
             }
             current_date += timedelta(days=1)
 
-    # ✅ Process "On Leave" for **both missing and existing attendance**
+ 
+
+    # ✅ Ensure leave_application is always added to the events list
+
     for date, leave_details in leave_map.items():
         if date in attendance_map:
-            # If attendance exists, update leave info
+            # Update existing attendance record
             attendance_map[date]["status"] = "On Leave"
             attendance_map[date]["leave_status"] = leave_details["status"]
             attendance_map[date]["leave_type"] = leave_details["leave_type"]
+            attendance_map[date]["leave_application"] = leave_details["leave_application"]  # ✅ Add Leave Application ID
+            
+            # ✅ If name is None, assign leave_application ID
+            if not attendance_map[date].get("name"):
+                attendance_map[date]["name"] = leave_details["leave_application"]  # ✅ Set name to Leave Application ID
         else:
-            # If attendance is missing, add a new leave event
+            # If no attendance exists, create a new leave event
             events.append({
                 'attendance_date': date,
                 'status': 'On Leave',
                 'leave_status': leave_details["status"],
                 'leave_type': leave_details["leave_type"],
+                'leave_application': leave_details["leave_application"],  # ✅ Include Leave Application ID
                 'employee': employee,
-                'name': None  
+                'name': leave_details["leave_application"]  # ✅ Assign Leave Application ID as name if no attendance record exists
             })
+
 
     # ✅ Process Final Events List
     modified_events = []
@@ -130,7 +141,8 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             event['title'] = 'Holiday: ' + (event.get('public_holiday_') or '')
 
         modified_events.append(event)
-
+        print(event.get('name'))
+        print(event.get('leave_application'))
     return {
         "modified_events": modified_events,
         "weekly_off": weekly_off  

@@ -1,4 +1,5 @@
 frappe.pages['my-calendar'].on_page_load = function(wrapper) {
+    
     var page = frappe.ui.make_app_page({
         parent: wrapper,
         title: 'My Calendar',
@@ -303,7 +304,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                             borderColor = backgroundColor;
                                                             break;
                                                         case 'On Leave':
-                                                            backgroundColor = '#98DDCA ';
+                                                            backgroundColor = '#98DDCA';
                                                             borderColor = backgroundColor;
                                                             break;
                                                         case 'Work From Home':
@@ -496,17 +497,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     }
                 },
                 // Highlight Fridays
-                
-                // dayCellClassNames: function(arg) {
-                //     var classes = [];
-                //     // Check if the day is Friday (5 is Friday in JavaScript)
-                //     if (arg.date.getDay() === 0) {
-                //         classes.push('weekly-off-highlight');
-
-                //     }
-                //     return classes;
-                // },
-                
+              
               
                 events: function(fetchInfo, successCallback, failureCallback) {
                    
@@ -760,25 +751,31 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     }
                 }
                 ,
+               
                 eventClick: function(info) {
-                    // Toggle popover on event click
-                    if (info.event.title.startsWith('3.AR: ')) {
-                        $(info.el).popover('toggle');
+                    var event = info.event;
+                    var docName = event.extendedProps.name
+                    
+                    console.log("Event Clicked:", event);
+                    console.log("Extended Props:", event.extendedProps.name);
+                    console.log("Leave Application ID:", event.extendedProps.leave_application);
+                    console.log("Document Name:", docName);
+                    
+                    // ✅ If the name is the Leave Application ID, open Leave Application
+                    if (docName.includes("LAP")) {
+                        console.log("Opening Leave Application:", docName);
+                        frappe.set_route('Form', 'Leave Application', docName);
+                    } 
+                    // ✅ If name contains "ATT", open Attendance
+                    else if (docName.includes("ATT")) {
+                        console.log("Opening Attendance:", docName);
+                        frappe.set_route('Form', 'Attendance', docName);
                     }
-                    
-
-                        var event = info.event;
-                        
-                        // If the event has a document name, navigate to the Attendance document
-                        if (event.extendedProps && event.extendedProps.name) {
-                            frappe.set_route('Form', 'Attendance', event.extendedProps.name);
-                        } 
-                    
-                        // Prevent the default browser action
-                        info.jsEvent.preventDefault();
-                    
-                    
-                },
+                }
+                
+                
+,                
+                
                 eventDrop: function(info) {
                     frappe.call({
                         method: "hr_plus.api.move_event",
@@ -957,15 +954,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                     },
                     // Highlight Fridays
                 
-                // dayCellClassNames: function(arg) {
-                //     var classes = [];
-                //     // Check if the day is Friday (5 is Friday in JavaScript)
-                //     if (arg.date.getDay() === 0) {
-                //         classes.push('weekly-off-highlight');
-
-                //     }
-                //     return classes;
-                // },
+               
                     events: function(fetchInfo, successCallback, failureCallback) {
                         // console.log(fetchInfo.startStr);
                         var startDate = new Date(fetchInfo.start);
@@ -1098,6 +1087,12 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                     eventClick: function(info) {
                         var eventDetailsCard = $('#event-details-card');
                         var event = info.event;
+                        var docName = event.extendedProps.name
+                    
+                        console.log("Event Clicked:", event);
+                        console.log("Extended Props:", event.extendedProps.name);
+                        console.log("Leave Application ID:", event.extendedProps.leave_application);
+                        console.log("Document Name:", docName);
                     
                         // Format the date as (Sat, 19 Jan)
                         var options = { weekday: 'short', day: 'numeric', month: 'short' };
@@ -1147,10 +1142,18 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         eventDetailsCard.html(combinedContent).show();
 
                         eventDetailsCard.find('.status-click').on('click', function() {
-                            if (event.extendedProps && event.extendedProps.name) {
-                                frappe.set_route('Form', 'Attendance', event.extendedProps.name);
+                            
+                            if ( event.extendedProps &&  docName.includes("LAP")) {
+                                console.log("Opening Leave Application:", docName);
+                                frappe.set_route('Form', 'Leave Application', docName);
+                            } 
+                            // ✅ If name contains "ATT", open Attendance
+                            else if ( event.extendedProps &&  docName.includes("ATT")) {
+                                console.log("Opening Attendance:", docName);
+                                frappe.set_route('Form', 'Attendance', docName);
                             }
                         });
+                       
                         // Apply hover effect using inline JavaScript
                         eventDetailsCard.find('.status-click').hover(function() {
                             $(this).css({
