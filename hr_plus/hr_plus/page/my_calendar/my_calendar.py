@@ -81,7 +81,8 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         filters={
             "employee": employee,
             "from_date": ["<=", end_date],
-            "to_date": [">=", start_date]
+            "to_date": [">=", start_date],
+            "docstatus": ["!=", 2]
         },
         fields=["name", "status", "from_date", "to_date", "leave_type"]
     )
