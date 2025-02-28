@@ -1,5 +1,5 @@
 frappe.pages['my-calendar'].on_page_load = function(wrapper) {
-    
+
     var page = frappe.ui.make_app_page({
         parent: wrapper,
         title: 'My Calendar',
@@ -264,19 +264,41 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     var startDate = new Date(fetchInfo.start);
                                     var endDate = new Date(fetchInfo.end);
                                     var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
-                                    var year = midDate.getFullYear();  // ✅ Get year from middle date
-                
-                                    // console.log("📆 Start Date:", startDate);
-                                    // console.log("📆 End Date:", endDate);
-                                    // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
+                                
+                                      // Extract correct month and year from midDate
+                                    var correctYear = midDate.getFullYear();
+                                    var correctMonth = midDate.getMonth();  // 0 = January, 11 = December
+
+                                    // Set startDate to 1st day of midDate's month
+                                    var correctedStartDate = new Date(correctYear, correctMonth, 1);
+
+                                
+                                    var correctedEndDate = new Date(correctYear, correctMonth + 1, 0); // ✅ Correct last day of the month
                                    
+                                    // // Debugging logs
+                                    // console.log("📆 Original Start Date:", startDate);
+                                    // console.log("📆 Original End Date:", endDate);
+                                    // console.log("🎯 MidDate (Correct Month-Year Extracted):", midDate);
+                                    // console.log("✅ Corrected Start Date:", correctedStartDate);
+                                    // console.log("✅ Corrected End Date:", correctedEndDate);
+
+                                    // console.log("✅ final Start Date:",correctedStartDate.getFullYear() + "-" + 
+                                    // String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                    // String(correctedStartDate.getDate()).padStart(2, '0'));
+                                    // console.log("✅ final End Date:", correctedEndDate.getFullYear() + "-" + 
+                                    // String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                    // String(correctedEndDate.getDate()).padStart(2, '0'));
                                     frappe.call({
                                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                                         args: {
-                                            start_date: fetchInfo.startStr,
-                                            end_date: fetchInfo.endStr,
+                                            start_date: correctedStartDate.getFullYear() + "-" + 
+                                            String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                            String(correctedStartDate.getDate()).padStart(2, '0'),
+                                            end_date: correctedEndDate.getFullYear() + "-" + 
+                                            String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                            String(correctedEndDate.getDate()).padStart(2, '0'),
                                             employee: employeeFilter,
-                                            calendar_year: year // Pass extracted year to backend
+                                            calendar_year:correctYear // Pass extracted year to backend
                                         },
                                         callback: function(r) {
                                             if (!r.exc && r.message) {
@@ -504,24 +526,28 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     var startDate = new Date(fetchInfo.start);
                     var endDate = new Date(fetchInfo.end);
                     var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
-                    var year = midDate.getFullYear();  // ✅ Get year from middle date
+                   
+                    // Extract correct month and year from midDate
+                    var correctYear = midDate.getFullYear();
+                    var correctMonth = midDate.getMonth();  // 0 = January, 11 = December
 
-                    // console.log("📆 Start Date:", startDate);
-                    // console.log("📆 End Date:", endDate);
-                    // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
-
+                    // Set startDate to 1st day of midDate's month
+                    var correctedStartDate = new Date(correctYear, correctMonth, 1);
+                    var correctedEndDate = new Date(correctYear, correctMonth + 1, 0);
                     var employeeFilter =  frappe.session.user; // Default to empty string for initial load
-                    console.log(fetchInfo.startStr)
-                    console.log(employeeFilter)
-                    console.log(fetchInfo.endStr)
-                    console.log(year)
+                   
+               
                     frappe.call({
                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                         args: {
-                            start_date: fetchInfo.startStr,
-                            end_date: fetchInfo.endStr,
+                            start_date:  correctedStartDate.getFullYear() + "-" + 
+                            String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                            String(correctedStartDate.getDate()).padStart(2, '0'),
+                            end_date: correctedEndDate.getFullYear() + "-" + 
+                            String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                            String(correctedEndDate.getDate()).padStart(2, '0'),
                             employee: employeeFilter,
-                            calendar_year: year 
+                            calendar_year: correctYear 
                         },
                         callback: function(r) {
                             if (!r.exc && r.message) {
@@ -756,10 +782,10 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                     var event = info.event;
                     var docName = event.extendedProps.name
                     
-                    console.log("Event Clicked:", event);
-                    console.log("Extended Props:", event.extendedProps.name);
-                    console.log("Leave Application ID:", event.extendedProps.leave_application);
-                    console.log("Document Name:", docName);
+                    // console.log("Event Clicked:", event);
+                    // console.log("Extended Props:", event.extendedProps.name);
+                    // console.log("Leave Application ID:", event.extendedProps.leave_application);
+                    // console.log("Document Name:", docName);
                     
                     // ✅ If the name is the Leave Application ID, open Leave Application
                     if (docName.includes("LAP")) {
@@ -833,17 +859,28 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
         var startDate = new Date(fetchInfo.start);
         var endDate = new Date(fetchInfo.end);
         var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
-        var year = midDate.getFullYear();  // ✅ Get year from middle date
+       // Extract correct month and year from midDate
+       var correctYear = midDate.getFullYear();
+       var correctMonth = midDate.getMonth();  // 0 = January, 11 = December
 
-        
+       // Set startDate to 1st day of midDate's month
+       var correctedStartDate = new Date(correctYear, correctMonth, 1);
+
+   
+       var correctedEndDate = new Date(correctYear, correctMonth + 1, 0);
+      
         // console.log("🎯 Extracted Year (Middle of Range):", year); 
         frappe.call({
             method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
             args: {
-                start_date: fetchInfo.startStr,
-                end_date: fetchInfo.endStr,
+                start_date: correctedStartDate.getFullYear() + "-" + 
+                String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                String(correctedStartDate.getDate()).padStart(2, '0'),
+                end_date: correctedEndDate.getFullYear() + "-" + 
+                String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                String(correctedEndDate.getDate()).padStart(2, '0') ,
                 employee: employeeFilter,
-                calendar_year: year 
+                calendar_year: correctYear 
             },
             callback: function(r) {
                 if (!r.exc && r.message) {
@@ -960,8 +997,22 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         var startDate = new Date(fetchInfo.start);
                         var endDate = new Date(fetchInfo.end);
                         var midDate = new Date((startDate.getTime() + endDate.getTime()) / 2);  // ✅ Get middle date
-                        var year = midDate.getFullYear();  // ✅ Get year from middle date
-    
+                              // Extract correct month and year from midDate
+                        var correctYear = midDate.getFullYear();
+                        var correctMonth = midDate.getMonth();  // 0 = January, 11 = December
+
+                        // Set startDate to 1st day of midDate's month
+                        var correctedStartDate = new Date(correctYear, correctMonth, 1);
+
+                    
+                        var correctedEndDate = new Date(correctYear, correctMonth + 1, 0);
+                        
+                        // console.log("📆 2. Start Date:",  correctedStartDate.getFullYear() + "-" + 
+                        // String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                        // String(correctedStartDate.getDate()).padStart(2, '0'));
+                        // console.log("📆 2. End Date:",  correctedEndDate.getFullYear() + "-" + 
+                        // String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                        // String(correctedEndDate.getDate()).padStart(2, '0') );
                         
                         // console.log("🎯 Extracted Year (Middle of Range):", year); // ✅ Debugging
     
@@ -969,10 +1020,14 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         frappe.call({
                             method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                             args: {
-                                start_date: fetchInfo.startStr,
-                                end_date: fetchInfo.endStr,
+                                start_date: correctedStartDate.getFullYear() + "-" + 
+                                String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                String(correctedStartDate.getDate()).padStart(2, '0'),
+                                end_date: correctedEndDate.getFullYear() + "-" + 
+                                String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                                String(correctedEndDate.getDate()).padStart(2, '0'),
                                 employee: employeeFilter,
-                                calendar_year: year 
+                                calendar_year: correctYear 
                                 
                             },
                             callback: function(r) {

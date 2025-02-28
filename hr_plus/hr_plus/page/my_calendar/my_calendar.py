@@ -7,7 +7,16 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     hr_role = frappe.db.get_value('HR Plus Settings', None, 'hr_plus_role')
     is_hr_manager = frappe.db.exists('Has Role', {'parent': current_user, 'role': hr_role})
 
-    filters = {'attendance_date': ['between', [start_date, end_date]], 'docstatus': 1}
+    # Convert start_date and end_date to remove the extra time format
+    start_dt = datetime.fromisoformat(start_date[:10])  # Extract only YYYY-MM-DD
+    end_dt = datetime.fromisoformat(end_date[:10]) 
+    filters = {
+        'attendance_date': ['between', [start_date, end_date]],
+        'docstatus': 1
+    }
+    print(start_dt.month)
+
+
 
     if not is_hr_manager:
         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
@@ -19,7 +28,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
     else:
         if employee:
             filters['employee'] = employee
-           
+        
         holiday_list = frappe.db.get_value('Holiday List', {'name': calendar_year}, 'name')
 
     weekly_off = frappe.db.get_value("Holiday List", {"name": holiday_list}, "weekly_off") if holiday_list else None
@@ -98,7 +107,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             }
             current_date += timedelta(days=1)
 
- 
+
 
     # ✅ Ensure leave_application is always added to the events list
 
@@ -142,8 +151,8 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             event['title'] = 'Holiday: ' + (event.get('public_holiday_') or '')
 
         modified_events.append(event)
-        print(event.get('name'))
-        print(event.get('leave_application'))
+        # print(event.get('name'))
+        # print(event.get('leave_application'))
     return {
         "modified_events": modified_events,
         "weekly_off": weekly_off  
