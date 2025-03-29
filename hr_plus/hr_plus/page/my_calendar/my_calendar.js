@@ -270,24 +270,9 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     var correctMonth = midDate.getMonth();  // 0 = January, 11 = December
 
                                     // Set startDate to 1st day of midDate's month
-                                    var correctedStartDate = new Date(correctYear, correctMonth, 1);
-
-                                
+                                    var correctedStartDate = new Date(correctYear, correctMonth, 1);                               
                                     var correctedEndDate = new Date(correctYear, correctMonth + 1, 0); // ✅ Correct last day of the month
-                                   
-                                    // // Debugging logs
-                                    // console.log("📆 Original Start Date:", startDate);
-                                    // console.log("📆 Original End Date:", endDate);
-                                    // console.log("🎯 MidDate (Correct Month-Year Extracted):", midDate);
-                                    // console.log("✅ Corrected Start Date:", correctedStartDate);
-                                    // console.log("✅ Corrected End Date:", correctedEndDate);
 
-                                    // console.log("✅ final Start Date:",correctedStartDate.getFullYear() + "-" + 
-                                    // String(correctedStartDate.getMonth() + 1).padStart(2, '0') + "-" + 
-                                    // String(correctedStartDate.getDate()).padStart(2, '0'));
-                                    // console.log("✅ final End Date:", correctedEndDate.getFullYear() + "-" + 
-                                    // String(correctedEndDate.getMonth() + 1).padStart(2, '0') + "-" + 
-                                    // String(correctedEndDate.getDate()).padStart(2, '0'));
                                     frappe.call({
                                         method: "hr_plus.hr_plus.page.my_calendar.my_calendar.get_calendar_events",
                                         args: {
@@ -303,6 +288,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                         callback: function(r) {
                                             if (!r.exc && r.message) {
                                                 console.log(`Event filters ${employeeFilter}`);
+                                                console.log(`Event  correctYear ${correctYear}`);
                                                 var attendance = r.message.modified_events;
                                                 var weeklyOffDay = r.message.weekly_off; 
                                                 var events = attendance.flatMap(function(event) {
