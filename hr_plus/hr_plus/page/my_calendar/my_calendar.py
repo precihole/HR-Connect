@@ -72,7 +72,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             "to_date": [">=", start_date],
             "docstatus": ["!=", 2]
         },
-        fields=["name", "status", "from_date", "to_date", "leave_type"]
+        fields=["name", "status", "from_date", "to_date", "leave_type","total_leave_days"]
     )
 
     leave_map = {}
@@ -82,7 +82,8 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             leave_map[current_date] = {
                 "status": leave["status"],
                 "leave_type": leave["leave_type"],
-                "leave_application": leave["name"]
+                "leave_application": leave["name"],
+                "total_leave_days":leave["total_leave_days"]
             }
             current_date += timedelta(days=1)
 
@@ -117,6 +118,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
             attendance_map[date]["leave_status"] = leave_details["status"]
             attendance_map[date]["leave_type"] = leave_details["leave_type"]
             attendance_map[date]["leave_application"] = leave_details["leave_application"]
+            attendance_map[date]["total_leave_days"] = leave_details["total_leave_days"]
 
             if not attendance_map[date].get("name"):
                 attendance_map[date]["name"] = leave_details["leave_application"]
@@ -127,6 +129,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
                 'leave_status': leave_details["status"],
                 'leave_type': leave_details["leave_type"],
                 'leave_application': leave_details["leave_application"],
+                "total_leave_days":leave_details["total_leave_days"],
                 'employee': employee,
                 'name': leave_details["leave_application"]
             })

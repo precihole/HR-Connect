@@ -293,6 +293,8 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                 var weeklyOffDay = r.message.weekly_off; 
                                                 var events = attendance.flatMap(function(event) {
                                                     var backgroundColor, borderColor, textColor = "black";
+                                                    console.log("Status:", event.status, "Total Leave Days:", event.total_leave_days);
+
                                                     switch (event.status) {
                                                         case 'Holiday':
                                                             backgroundColor = '#bea8f2';  // Holiday color
@@ -459,6 +461,18 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                         });
                                                     }
 
+                                                    if (event.status === "On Leave" && event.total_leave_days) {
+                                                        eventList.push({
+                                                            title: '4. Total Leave Days: ' + event.total_leave_days,
+                                                            start: event.attendance_date,
+                                                            backgroundColor: backgroundColor,
+                                                            borderColor: borderColor,
+                                                            textColor: textColor,
+                                                            extendedProps: { name: event.name, status: event.status,total_leave_days: event.total_leave_days, employee: event.employee }
+                                                        });
+                                                   }
+                                                    
+
                                                     return eventList;
                                                 });
                                                 // console.log(events);
@@ -541,6 +555,8 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                 var attendance = r.message.modified_events;
                                 var weeklyOffDay = r.message.weekly_off; 
                                 var events = attendance.flatMap(function(event) {
+                                    console.log("Status:", event.status, "Total Leave Days:", event.total_leave_days);
+
                                     var backgroundColor, borderColor, textColor = "black";
                                     switch (event.status) {
                                         case 'Holiday':
@@ -702,7 +718,19 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                             extendedProps: { name: event.name, status: event.status, employee: event.employee }
                                         });
                                     }
+                                    if (event.status === "On Leave" && event.total_leave_days) {
+                                        eventList.push({
+                                            title: '4. Total Leave Days: ' + event.total_leave_days,
+                                            start: event.attendance_date,
+                                            backgroundColor: backgroundColor,
+                                            borderColor: borderColor,
+                                            textColor: textColor,
+                                            extendedProps: { name: event.name, status: event.status,total_leave_days: event.total_leave_days, employee: event.employee }
+                                        });
+                                   }
+                                    
 
+                                 
                                     return eventList;
                                 });
                                 // console.log(events);
@@ -875,6 +903,8 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                     var weeklyOffDay = r.message.weekly_off; 
                     var events = attendance.flatMap(function(event) {
                         var backgroundColor, borderColor, textColor = "black";
+                        console.log("Status:", event.status, "Total Leave Days:", event.total_leave_days);
+
                         switch (event.status) {
                             case 'Holiday':
                                 backgroundColor = '#bea8f2';  // Holiday color
@@ -929,7 +959,9 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                 backgroundColor: backgroundColor,
                                 borderColor: borderColor,
                                 textColor: textColor,
-                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason,leave_status :event.leave_status }
+                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, holiday: event.public_holiday_,   early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason,leave_status :event.leave_status ,
+                                    total_leave_days:event.total_leave_days
+                                }
                             }
                         ];
 
@@ -1023,6 +1055,8 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                     var weeklyOffDay = r.message.weekly_off; 
                                     var events = attendance.flatMap(function(event) {
                                         var backgroundColor, borderColor, textColor = "black";
+                                        console.log("Status:", event.status, "Total Leave Days:", event.total_leave_days);
+
                                         switch (event.status) {
                                             case 'Holiday':
                                                     backgroundColor = '#bea8f2';  // Holiday color
@@ -1076,7 +1110,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                                 backgroundColor: backgroundColor,
                                                 borderColor: borderColor,
                                                 textColor: textColor,
-                                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason , holiday: event.public_holiday_, workflow_state: event.workflow_state,leave_status: event.leave_status}
+                                                extendedProps: {  name: event.name, employee: event.employee, in_time: event.in_time, out_time: event.out_time, late_entry: event.late_entry, early_exit: event.early_exit, leave_type: event.leave_type, attendance_request: event.attendance_request, reason: event.reason , holiday: event.public_holiday_, workflow_state: event.workflow_state,leave_status: event.leave_status, total_leave_days:event.total_leave_days}
                                             }
                                         ];
                 
@@ -1169,6 +1203,11 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         if (event.title === "On Leave" && event.extendedProps.leave_status) {
                             content += `<p><strong>Status:</strong> ${event.extendedProps.leave_status}</p>`;
                         }
+
+                        if (event.title === "On Leave" && event.extendedProps.total_leave_days) {
+                            content += `<p><strong>Total Leave Days:</strong> ${event.extendedProps.total_leave_days}</p>`;
+                        }
+                        
                        
                         if (event.extendedProps.attendance_request || event.extendedProps.reason) {
                             content += `<p><strong>Attendance Request:</strong> ${event.extendedProps.reason} ( ${event.extendedProps.workflow_state} )</p>`;
