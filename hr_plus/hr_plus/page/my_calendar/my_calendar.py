@@ -53,25 +53,29 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         fields=["name", "status", "in_time", "out_time", "attendance_date", "employee", 
                 "attendance_request", "late_entry", "early_exit", "leave_type"]
     )
-    if not attendance_records:
-        # fallback to fetch checkin/out from Employee Checkin
-        employee_checkins = frappe.db.get_list("Employee Checkin",
-            filters={
-                "employee": employee,
-                "time": ["between", [start_date, end_date]]
-            },
-            fields=["time", "log_type"]
-        )
+    events += attendance_records  # ✅ add attendance records to events
 
-        checkin_map = {}
-        for log in employee_checkins:
-            date_str = log["time"].date()
-            if date_str not in checkin_map:
-                checkin_map[date_str] = {}
+    # fallback to fetch checkin/out from Employee Checkin
+    employee_checkins = frappe.db.get_list("Employee Checkin",
+        filters={
+            "employee": employee,
+            "time": ["between", [start_date, end_date]],
+            
+        },
+        fields=["time", "log_type"]
+    )
 
-            checkin_map[date_str][log["log_type"]] = log["time"].strftime("%H:%M")
 
-        for date, logs in checkin_map.items():
+    checkin_map = {}
+    for log in employee_checkins:
+        date_str = log["time"].date()
+        if date_str not in checkin_map:
+            checkin_map[date_str] = {}
+        checkin_map[date_str][log["log_type"]] = log["time"].strftime("%H:%M")
+
+    for date, logs in checkin_map.items():
+        # Only add if no Attendance exists for that date
+        if not any(a["attendance_date"] == date for a in attendance_records):
             events.append({
                 "attendance_date": date,
                 "status": "Check-in & Out",
@@ -81,10 +85,6 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
                 "name": f"Checkin-{date}"
             })
 
-
- 
-
-    events += attendance_records  # ✅ add attendance records to events
 
     # ✅ Fetch Attendance Records
     # events = frappe.db.get_list('Attendance', 

@@ -325,7 +325,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                             backgroundColor = '#0096FF';
                                                             break;
                                                         default:
-                                                            backgroundColor = 'red';
+                                                            backgroundColor = '#FFDE21';
                                                             borderColor = backgroundColor;
                                                     }
 
@@ -587,7 +587,7 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                             backgroundColor = '#0096FF';
                                             break;    
                                         default:
-                                            backgroundColor = 'red';
+                                            backgroundColor = '#FFDE21';
                                             borderColor = backgroundColor;
                                     }
 
@@ -934,7 +934,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                 backgroundColor = '#0096FF';
                                 break; 
                             default:
-                                backgroundColor = 'red';
+                                backgroundColor = '#FFDE21';
                                 borderColor = backgroundColor;
                         }
 
@@ -1086,7 +1086,7 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                                 backgroundColor = '#0096FF';
                                                 break; 
                                             default:
-                                                backgroundColor = 'red';
+                                                backgroundColor = '#FFDE21';
                                                 borderColor = backgroundColor;
                                         }
                 
