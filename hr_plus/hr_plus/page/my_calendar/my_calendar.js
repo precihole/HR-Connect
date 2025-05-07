@@ -324,8 +324,11 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                         case 'Check-in & Out': 
                                                             backgroundColor = '#0096FF';
                                                             break;
+                                                        case 'Attendance Request': 
+                                                        backgroundColor = '#FFDE21';
+                                                        break;
                                                         default:
-                                                            backgroundColor = '#FFDE21';
+                                                            backgroundColor = 'pink';
                                                             borderColor = backgroundColor;
                                                     }
 
@@ -395,9 +398,9 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                                     
                                                     // Conditionally add FPC
                                                     // Add workflow_state to event titles for attendance_request
-                                                    if (event.attendance_request) {
+                                                    if (event.attendance_request && event.status === "Attendance Request") {
                                                         eventList.push({
-                                                            title: '3.Attendance Request: ' + event.workflow_state,  // Display workflow_state with attendance_request
+                                                            title: '2.Status: ' + event.workflow_state,  // Display workflow_state with attendance_request
                                                             start: event.attendance_date,
                                                             backgroundColor: backgroundColor,
                                                             borderColor: "#395144",
@@ -585,9 +588,12 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                             break;
                                         case 'Check-in & Out': 
                                             backgroundColor = '#0096FF';
-                                            break;    
+                                            break;
+                                        case 'Attendance Request': 
+                                        backgroundColor = '#FFDE21';
+                                        break;    
                                         default:
-                                            backgroundColor = '#FFDE21';
+                                            backgroundColor = 'pink';
                                             borderColor = backgroundColor;
                                     }
 
@@ -629,9 +635,9 @@ frappe.pages['my-calendar'].on_page_load = function(wrapper) {
                                     }
                                     
                                     // Conditionally add FPC
-                                    if (event.attendance_request) {
+                                    if (event.attendance_request  && event.status === "Attendance Request") {
                                         eventList.push({
-                                            title: '3.Attendance Request: ' + event.workflow_state,  // Display workflow_state with attendance_request
+                                            title: '2.Status: ' + event.workflow_state,  // Display workflow_state with attendance_request
                                             start: event.attendance_date,
                                             backgroundColor: backgroundColor,
                                             borderColor: "#395144",
@@ -933,8 +939,11 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                             case 'Check-in & Out': 
                                 backgroundColor = '#0096FF';
                                 break; 
+                            case 'Attendance Request': 
+                            backgroundColor = '#FFDE21';
+                            break;
                             default:
-                                backgroundColor = '#FFDE21';
+                                backgroundColor = 'pink';
                                 borderColor = backgroundColor;
                         }
 
@@ -1085,8 +1094,11 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                                             case 'Check-in & Out': 
                                                 backgroundColor = '#0096FF';
                                                 break; 
+                                            case 'Attendance Request': 
+                                            backgroundColor = '#FFDE21';
+                                            break;
                                             default:
-                                                backgroundColor = '#FFDE21';
+                                                backgroundColor = 'pink';
                                                 borderColor = backgroundColor;
                                         }
                 
@@ -1164,10 +1176,10 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         var event = info.event;
                         var docName = event.extendedProps.name
                     
-                        console.log("Event Clicked:", event);
-                        console.log("Extended Props:", event.extendedProps.name);
-                        console.log("Leave Application ID:", event.extendedProps.leave_application);
-                        console.log("Document Name:", docName);
+                        // console.log("Event Clicked:", event);
+                        // console.log("Extended Props:", event.extendedProps.name);
+                        // console.log("Leave Application ID:", event.extendedProps.leave_application);
+                        console.log("AR workflow status:", event);
                     
                         // Format the date as (Sat, 19 Jan)
                         var options = { weekday: 'short', day: 'numeric', month: 'short' };
@@ -1209,8 +1221,8 @@ frappe.db.get_value('Employee', employeeFilter, ['employee_name', 'name'], funct
                         }
                         
                        
-                        if (event.extendedProps.attendance_request || event.extendedProps.reason) {
-                            content += `<p><strong>Attendance Request:</strong> ${event.extendedProps.reason} ( ${event.extendedProps.workflow_state} )</p>`;
+                        if (event.title === "Attendance Request" && (event.extendedProps.attendance_request || event.extendedProps.reason)) {
+                            content += `<p><strong>Reason:</strong> ${event.extendedProps.reason} ( ${event.extendedProps.workflow_state} )</p>`;
                         }
                         if (event.extendedProps.holiday) {
                             content += `<p><strong>Reason:</strong> ${event.extendedProps.holiday}</p>`;

@@ -1,6 +1,7 @@
 
 import frappe
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 @frappe.whitelist()
 def get_calendar_events(start_date, end_date, employee=None, calendar_year=None):
@@ -65,27 +66,30 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         fields=["time", "log_type"]
     )
 
+    checkin_logs = defaultdict(lambda: {"IN": [], "OUT": []})
 
-    checkin_map = {}
     for log in employee_checkins:
-        date_str = log["time"].date()
-        if date_str not in checkin_map:
-            checkin_map[date_str] = {}
-        checkin_map[date_str][log["log_type"]] = log["time"].strftime("%H:%M")
+        log_date = log["time"].date()
+        log_type = log["log_type"]
+        if log_type in ["IN", "OUT"]:
+            checkin_logs[log_date][log_type].append(log["time"])
 
-    for date, logs in checkin_map.items():
+    for date, logs in checkin_logs.items():
+        in_time = min(logs["IN"]).strftime("%H:%M") if logs["IN"] else None
+        out_time = max(logs["OUT"]).strftime("%H:%M") if logs["OUT"] else None
+
         # Only add if no Attendance exists for that date
         if not any(a["attendance_date"] == date for a in attendance_records):
             events.append({
                 "attendance_date": date,
                 "status": "Check-in & Out",
-                "in_time": logs.get("IN"),
-                "out_time": logs.get("OUT"),
+                "in_time": in_time,
+                "out_time": out_time,
                 "employee": employee,
                 "name": f"Checkin-{date}"
             })
 
-
+            
     # ✅ Fetch Attendance Records
     # events = frappe.db.get_list('Attendance', 
     #     filters=filters,
@@ -167,7 +171,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
 
     # ✅ Add Attendance Requests to Events (ONLY IF NO ATTENDANCE EXISTS)
     for date, request_details in attendance_request_map.items():
-        if date not in attendance_map:  # ✅ Show Attendance Request ONLY if no Attendance exists
+        if date  in attendance_map:  # ✅ Show Attendance Request ONLY if no Attendance exists
             events.append({
                 'attendance_date': date,
                 'status': 'Attendance Request',
