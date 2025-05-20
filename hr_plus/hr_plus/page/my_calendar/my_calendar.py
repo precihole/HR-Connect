@@ -13,7 +13,7 @@ def get_calendar_events(start_date, end_date, employee=None, calendar_year=None)
         'attendance_date': ['between', [start_date, end_date]],
         'docstatus': 1
     }
-
+# sfsdfsdf
     if not is_hr_manager:
         employee = frappe.db.get_value('Employee', {'user_id': current_user}, 'name')
         if not employee:
